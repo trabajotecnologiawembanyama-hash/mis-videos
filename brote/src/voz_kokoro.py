@@ -115,8 +115,11 @@ def syllables(w):
 def process(x, semis, gain_db, tmp):
     sf.write(tmp + "_in.wav", x, SR)
     ratio = 2 ** (semis / 12)
-    af = (f"aresample=48000,rubberband=pitch={ratio:.4f}:formant=preserved:pitchq=quality,"
-          f"volume={gain_db}dB")
+    if os.environ.get("NATURAL"):
+        af = f"aresample=48000:resampler=soxr,volume={gain_db * 0.6:.2f}dB"      # sin cambio de tono artificial
+    else:
+        af = (f"aresample=48000,rubberband=pitch={ratio:.4f}:formant=preserved:pitchq=quality,"
+              f"volume={gain_db}dB")
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", tmp + "_in.wav", "-af", af, "-ac", "1", tmp + "_out.wav"], check=True)
     y, _ = sf.read(tmp + "_out.wav")
     return y.astype(np.float32)
@@ -171,6 +174,10 @@ sf.write(f"{OUT}/voz_raw.wav", x, 48000)
 # cadena final: voz cercana y brillante, compresión suave, sin reverb pesada
 af = ("highpass=f=70,equalizer=f=200:t=q:w=1:g=1.5,equalizer=f=3500:t=q:w=1.2:g=2.5,equalizer=f=9000:t=q:w=1:g=1.5,"
       "acompressor=threshold=-20dB:ratio=2.5:attack=6:release=120,loudnorm=I=-16:TP=-1.5")
+if os.environ.get("NATURAL"):
+    # cadena de locutor natural: cuerpo suave, sin realces agresivos, compresión ligera y una sala pequeña muy sutil
+    af = ("highpass=f=60,equalizer=f=160:t=q:w=1:g=1.0,equalizer=f=2800:t=q:w=1.5:g=1.0,"
+          "acompressor=threshold=-24dB:ratio=1.8:attack=15:release=250,aecho=0.85:0.4:18|31:0.07|0.05,loudnorm=I=-16:TP=-1.5")
 subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", f"{OUT}/voz_raw.wav", "-af", af, "-ar", "48000", "-ac", "1", f"{OUT}/voz.wav"], check=True)
 for f in ("tmp_in.wav", "tmp_out.wav"):
     if os.path.exists(f"{OUT}/{f}"): os.remove(f"{OUT}/{f}")
