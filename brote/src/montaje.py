@@ -331,7 +331,7 @@ def build_audio(path):
         # Do mayor / La menor: esperanza con melancolía; plucks cálidos tipo ukelele
         prog = [[60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62]]   # C Am F G
         t = 0.0; bar = 2.4
-        while t < 46.5:
+        while t < at("Y no") - 0.5:
             ch = prog[int(t / bar) % 4]
             place(mus, pad([midi(m - 12) for m in ch], bar + 0.6, 0.6, 0.8, 0.10), t)
             for j, m in enumerate([ch[0], ch[2], ch[1] + 12, ch[2]]):
@@ -340,21 +340,22 @@ def build_audio(path):
                 place(mus, piano(midi(ch[0] + 12), 2.4, 0.18), t + bar / 2)
             t += bar
         # gancho final: misterio (acorde suspendido) + nota grave
-        place(mus, pad([midi(m) for m in (50, 57, 62, 64)], 8.0, 0.8, 2.5, 0.16, 900), 47.0)
-        place(mus, piano(midi(38), 6.0, 0.4), 47.2)
-        place(mus, piano(midi(74), 4.0, 0.22), 51.3)
+        place(mus, pad([midi(m) for m in (50, 57, 62, 64)], DUR - at("Y no") + 0.2, 0.8, 2.5, 0.16, 900), at("Y no") - 0.2)
+        place(mus, piano(midi(38), 6.0, 0.4), at("Y no"))
+        place(mus, piano(midi(74), 4.0, 0.22), at("mirándolo") + 1.0)
         # efectos
         for k, tt in enumerate(np.arange(0.4, 2.8, 0.55)): place(fx, thump(105, 0.25, 0.35), tt)
         for tt in np.arange(at("Cada") + 0.3, at("Quería"), 0.6): place(fx, thump(95, 0.25, 0.25), tt)    # pelota casi sin aire
         for tt in (at("Unas") + 0.2, at("Unas") + 0.9, at("Unas") + 1.7): place(fx, coins(0.25), tt)
         place(fx, rip(0.45, 0.4), at("Así") + 0.6); place(fx, rip(0.35, 0.3), at("Así") + 2.4)
         place(fx, thump(130, 0.2, 0.3), at("Lanzó") + 0.25)
-        place(fx, wind(10, 0.03), 45.0)
+        place(fx, wind(DUR - at("Lanzó"), 0.03), at("Lanzó") + 1.0)
+        place(fx, thump(150, 0.15, 0.25), at("Lanzó") + 1.25)
     else:
         # La menor: tensión del gimnasio; corte seco cuando se rompe la suela; piano triste; grave de misterio
         place(fx, murmur(at("Los otros") + 0.5 - 0.0, 0.035), 0.0)
         place(fx, murmur(at("En ese") - at("Los otros"), 0.05), at("Los otros"))
-        for tt in (1.2, 2.9, 6.1, 10.5, 12.0, 22.3, 23.4): place(fx, squeak(0.08), tt, pan=rng.uniform(-0.5, 0.5))
+        for tt in (1.2, 2.9, 6.1, at("Los otros") + 1.2, at("Los otros") + 2.7, at("Pedrito robó") + 0.5, at("Pedrito robó") + 1.6): place(fx, squeak(0.08), tt, pan=rng.uniform(-0.5, 0.5))
         prog = [[57, 60, 64], [53, 57, 60], [55, 59, 62], [52, 55, 59]]   # Am F G Em
         t = 0.0; bar = 2.0
         while t < at("En ese") + 0.1:
