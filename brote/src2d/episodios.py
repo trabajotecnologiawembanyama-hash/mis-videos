@@ -395,6 +395,9 @@ EPISODES = {"ep01": ep01, "ep02": ep02}
 if os.path.exists(os.path.join(os.path.dirname(__file__), "episodios_b.py")):
     from episodios_b import ep03, ep04, ep05
     EPISODES.update(ep03=ep03, ep04=ep04, ep05=ep05)
+if os.path.exists(os.path.join(os.path.dirname(__file__), "episodios_c.py")):
+    from episodios_c import ep06, ep07, ep08, ep09, ep10
+    EPISODES.update(ep06=ep06, ep07=ep07, ep08=ep08, ep09=ep09, ep10=ep10)
 
 
 # ===================================================================== render
@@ -404,7 +407,7 @@ def subtitle(cv, T):
         end = nxt if nxt - w["t1"] < 0.35 else w["t1"] + 0.18
         if w["t0"] <= T < end:
             s = 0.86 + 0.14 * ease((T - w["t0"]) / 0.08)
-            text_center(cv, w["w"].strip("«»").upper(), W / 2, 1450, 104, (255, 255, 255), (0, 0, 0), 0.085, scale=s)
+            text_center(cv, w["w"].replace("«", "").replace("»", "").upper(), W / 2, 1450, 104, (255, 255, 255), (0, 0, 0), 0.085, scale=s)
             return
 
 

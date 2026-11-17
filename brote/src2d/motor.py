@@ -82,6 +82,14 @@ NEIGHBORS = [dict(hair=h_, hair_col=hc, shirt=sc, shirt2=tuple(int(v * 0.8) for 
                                         ("short", (20, 20, 20), (80, 110, 200), (40, 40, 40), 1.35), ("curly", (30, 20, 10), (240, 180, 60), (50, 50, 60), 1.0),
                                         ("short", (110, 70, 30), (120, 200, 220), (60, 40, 30), 1.28), ("bun", (180, 180, 180), (190, 80, 90), (60, 60, 80), 1.22)]]
 
+CAMILA = dict(hair="braids", hair_col=(70, 40, 24), glasses=(30, 30, 34), shirt=(250, 250, 245), shirt2=(225, 225, 220), pants=(52, 70, 120),
+              apron=(255, 200, 61), stains=True, shoe=(200, 60, 60), h=1.0)
+CAMILA_PIJAMA = dict(hair="braids", hair_col=(70, 40, 24), glasses=(30, 30, 34), shirt=(150, 190, 235), shirt2=(120, 160, 210), pants=(150, 190, 235),
+                     shoe=(240, 220, 200), h=1.0)
+ROSA = dict(hair="bun", hair_col=(240, 240, 238), shirt=(170, 120, 190), shirt2=(140, 96, 160), pants=(110, 80, 130), skirt=True,
+            apron=(245, 235, 220), shoe=(90, 70, 60), h=1.26)
+JUEZ = dict(hair="short", hair_col=(60, 60, 64), glasses=(20, 20, 20), shirt=(60, 70, 90), shirt2=(44, 52, 70), pants=(40, 44, 56), shoe=(30, 30, 30), h=1.34)
+JUEZA = dict(hair="bun", hair_col=(90, 50, 30), shirt=(180, 60, 70), shirt2=(140, 44, 54), pants=(60, 50, 60), skirt=True, shoe=(40, 30, 30), h=1.28)
 BLACK = (18, 18, 20)
 ZERO = dict(lean=0, head=0, ab=(8, -4), af=(-6, -4), lb=(4, 0), lf=(-4, 0), air=0, seat=None, look=(0.6, 0), blink=0, mood="neutral",
             tears=0, squash=1.0, body_rot=0)
@@ -256,6 +264,14 @@ def draw_char(cv, spec, p, x, y, S, face=1, t=0.0, extras=None):
     shirt_p = lin((0, -th), (0, 0), [shirt, shirt2])
     rrect(cv, -tw / 2, -th - 0.005 * u, tw, th * 0.98, 0.035 * u, shirt_p)
     cv.drawLine(-tw * 0.18, -th * 0.92, tw * 0.18, -th * 0.92, stroke(shirt2, lw * 0.5, 0.8))
+    if spec.get("apron"):
+        ac = spec["apron"]
+        cv.drawLine(-tw * 0.22, -th * 0.95, -tw * 0.3, -th * 0.68, stroke(ac, lw * 0.55)); cv.drawLine(tw * 0.22, -th * 0.95, tw * 0.3, -th * 0.68, stroke(ac, lw * 0.55))
+        rrect(cv, -tw * 0.44, -th * 0.72, tw * 0.88, th * 0.72 + 0.085 * u, 0.02 * u, lin((0, -th), (0, 0.08 * u), [ac, tuple(int(v * 0.86) for v in ac)]))
+        rrect(cv, -tw * 0.2, -th * 0.3, tw * 0.4, th * 0.2, 0.008 * u, stroke(tuple(int(v * 0.75) for v in ac), lw * 0.3))
+        if spec.get("stains"):
+            for (sx_, sy_, sr_) in ((-0.22, -0.5, 0.02), (0.18, -0.15, 0.026), (-0.05, 0.12, 0.018), (0.25, -0.55, 0.012)):
+                cv.drawCircle(tw * sx_, th * sy_, u * sr_, fill((60, 44, 30), 0.75))
     if spec.get("number"):
         f = skia.Font(typeface("Inter-Black"), 0.06 * u)
         cv.drawString(spec["number"], -f.measureText(spec["number"]) / 2, -th * 0.42, f, fill((255, 255, 255)))
@@ -277,6 +293,12 @@ def draw_char(cv, spec, p, x, y, S, face=1, t=0.0, extras=None):
         cv.drawPath(path([(-face * hr * 0.6, -hr * 0.3), (-face * hr * 1.35, hr * 0.25), (-face * hr * 1.1, hr * 0.55), (-face * hr * 0.7, hr * 0.2)]), fill(hcol))
     if hair == "bun":
         cv.drawCircle(-face * hr * 0.55, -hr * 0.85, hr * 0.38, fill(hcol))
+    if hair == "braids":
+        for sx in (-1, 1):
+            sway = math.sin(t * 3 + sx) * hr * 0.05
+            for k in range(5):
+                cv.drawCircle(sx * hr * (0.98 + 0.03 * k) - face * hr * 0.12 + sway * k * 0.4, hr * (0.25 + 0.3 * k), hr * (0.2 - 0.012 * k), fill(hcol))
+            cv.drawCircle(sx * hr * 1.1 - face * hr * 0.12 + sway * 2, hr * 1.72, hr * 0.12, fill(spec.get("ribbon", (230, 70, 80))))
     cv.drawCircle(0, 0, hr, rad((-hr * 0.35, -hr * 0.4), hr * 1.5, [(255, 255, 252), (240, 238, 232), (205, 202, 196)], [0, 0.55, 1]))
     cv.drawCircle(0, 0, hr, stroke((30, 30, 30), max(1.5, lw * 0.18), 0.35))
     if hair == "curly":
@@ -289,7 +311,7 @@ def draw_char(cv, spec, p, x, y, S, face=1, t=0.0, extras=None):
             if face * cx_ > hr * 0.55 and cy_ > -hr * 0.55: continue
             cv.drawCircle(cx_ - face * hr * 0.08, cy_ - hr * 0.08, hr * rnd.uniform(0.2, 0.27), fill((26, 20, 16)))
             cv.drawCircle(cx_ - face * hr * 0.08 - hr * 0.05, cy_ - hr * 0.13, hr * 0.06, fill((70, 60, 54), 0.5))
-    elif hair in ("short", "pony", "bun", "spiky"):
+    elif hair in ("short", "pony", "bun", "spiky", "braids"):
         pth = skia.Path(); pth.addArc(skia.Rect.MakeXYWH(-hr * 1.03, -hr * 1.05, hr * 2.06, hr * 2.06), 180 + (20 if face > 0 else 0), 160)
         pth.close(); cv.drawPath(pth, fill(hcol))
         if hair == "spiky":
@@ -314,9 +336,13 @@ def draw_char(cv, spec, p, x, y, S, face=1, t=0.0, extras=None):
         cv.drawOval(skia.Rect.MakeXYWH(exx - ew, eyy - eh, ew * 2, eh * 2), fill((12, 12, 14)))
         if bl < 0.5:
             cv.drawCircle(exx + hr * 0.035, eyy - hr * 0.06, hr * 0.035, fill((255, 255, 255)))
+        if spec.get("glasses"):
+            cv.drawCircle(exx, eyy, hr * 0.23, fill((190, 225, 255), 0.22))
+            cv.drawCircle(exx, eyy, hr * 0.23, stroke(spec["glasses"], max(2.0, hr * 0.055)))
+            if sx == 1: cv.drawLine(exx - hr * 0.23, eyy, exx - hr * 0.6 * (0.85 if face < 0 else 1.0) * 0 - hr * 0.37, eyy, stroke(spec["glasses"], max(2.0, hr * 0.05)))
         # cejas
         ang, dy = BROWS.get(p.get("mood", "neutral"), (0, 0))
-        a = math.radians(ang) * (-sx * face)
+        a = math.radians(ang) * (-sx)
         bx, by = exx, eyy - hr * 0.3 - dy * hr
         dx_, dy_ = math.cos(a) * hr * 0.17, math.sin(a) * hr * 0.17
         cv.drawLine(bx - dx_, by - dy_, bx + dx_, by + dy_, stroke((14, 14, 14), max(2.5, hr * 0.075)))

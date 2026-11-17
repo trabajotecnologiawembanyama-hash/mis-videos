@@ -37,14 +37,21 @@ def syllables(w):
 
 
 SR = 48000
-audio = [np.zeros(int(0.3 * SR), np.float32)]; t = 0.3; words = []
+TARGET = float(os.environ.get("TARGET", "50.5"))
+import hashlib
+os.makedirs(f"{OUT}/cache", exist_ok=True)
+segs_all = []
 for si, (disp, spoken, emo) in enumerate(GUION[EP]):
     spd, semis, gain, gap = EMO[emo]
     speed = 1.0 + (spd - 1.0) * 0.8
-    x, sr = tts(spoken or disp, speed, gain * 0.6)
-    tmp = f"{OUT}/tmp.wav"; sf.write(tmp, x, sr)
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", tmp, "-ar", str(SR), "-ac", "1", f"{OUT}/tmp48.wav"], check=True)
-    y, _ = sf.read(f"{OUT}/tmp48.wav"); y = y.astype(np.float32)
+    key = hashlib.md5(f"{VOICE}|{MODEL}|{spoken or disp}|{speed:.2f}|{gain * 0.6:.1f}".encode()).hexdigest()[:16]
+    cf = f"{OUT}/cache/{key}.wav"
+    if not os.path.exists(cf):
+        x, sr = tts(spoken or disp, speed, gain * 0.6)
+        tmp = f"{OUT}/tmp.wav"; sf.write(tmp, x, sr)
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", tmp, "-ar", str(SR), "-ac", "1", cf], check=True)
+        os.remove(tmp)
+    y, _ = sf.read(cf); y = y.astype(np.float32)
     env = np.sqrt(np.convolve(y ** 2, np.ones(960) / 960, "same"))
     thr = 0.08 * env.max()
     on = np.where(env > thr)[0]
@@ -67,19 +74,28 @@ for si, (disp, spoken, emo) in enumerate(GUION[EP]):
         segs.append((s0, a1))
     else:
         phrases, segs = [disp], [(a0, a1)]
+    rel = []
     for ph, (s0, s1) in zip(phrases, segs):
         ws = ph.split(); wt = np.array([syllables(w) + 0.35 for w in ws]); c = np.concatenate([[0], np.cumsum(wt)]) / wt.sum()
         for n, w in enumerate(ws):
-            words.append({"w": w, "t0": round(t + (s0 + c[n] * (s1 - s0)) / SR, 3), "t1": round(t + (s0 + c[n + 1] * (s1 - s0)) / SR, 3), "s": si, "emo": emo})
-    g = gap * GAP_K + (0.5 if si == len(GUION[EP]) - 2 else 0)
+            rel.append((w, (s0 + c[n] * (s1 - s0)) / SR, (s0 + c[n + 1] * (s1 - s0)) / SR))
+    segs_all.append((y, rel, gap, emo, disp))
+    print(f"{si:2d} {emo:9s} {len(y) / SR:5.2f}s {disp}", flush=True)
+speech = sum(len(y) for y, *_ in segs_all) / SR
+base = sum(g for _, _, g, _, _ in segs_all[:-1])
+K = min(3.4, max(1.0, (TARGET - 0.3 - 0.5 - speech - 0.4) / base)) if "GAP_K" not in os.environ else GAP_K
+print(f"voz {speech:.1f}s, pausas x{K:.2f}")
+audio = [np.zeros(int(0.3 * SR), np.float32)]; t = 0.3; words = []
+for si, (y, rel, gap, emo, disp) in enumerate(segs_all):
+    for w, r0, r1 in rel:
+        words.append({"w": w, "t0": round(t + r0, 3), "t1": round(t + r1, 3), "s": si, "emo": emo})
+    g = gap * K + (0.5 if si == len(segs_all) - 2 else 0)
     audio += [y, np.zeros(int(g * SR), np.float32)]
-    print(f"{si:2d} {emo:9s} {t:6.2f}-{t + len(y) / SR:6.2f} {disp}", flush=True)
     t += len(y) / SR + g
 x = np.concatenate(audio); sf.write(f"{OUT}/voz_raw.wav", x, SR)
 af = ("highpass=f=60,equalizer=f=160:t=q:w=1:g=0.8,acompressor=threshold=-24dB:ratio=1.8:attack=15:release=250,"
       "aecho=0.85:0.4:18|31:0.06|0.04,loudnorm=I=-16:TP=-1.5")
 subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", f"{OUT}/voz_raw.wav", "-af", af, "-ar", str(SR), "-ac", "1", f"{OUT}/voz.wav"], check=True)
-for f in ("tmp.wav", "tmp48.wav"): os.remove(f"{OUT}/{f}")
 json.dump({"duration": round(t, 3), "voice": f"fish {VOICE} {MODEL}", "words": words, "sentences": [g_[0] for g_ in GUION[EP]]},
           open(f"{OUT}/palabras.json", "w"), ensure_ascii=False, indent=1)
 print(f"duración {t:.2f}s")
