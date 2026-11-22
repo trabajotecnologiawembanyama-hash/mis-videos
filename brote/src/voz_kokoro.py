@@ -168,6 +168,23 @@ GUION = {
   ("Camila subió al escenario, miró a la abuela entre el público y levantó el trofeo con las dos manos.", None, "alegre"),
   ("La próxima semana, una cocina, mucha harina y un concurso…", "La próxima semana, una cocina, mucha harina y un concurso...", "misterio"),
  ],
+ "ep11": [
+  ("Mateo tiene veinte días y cero pesos para salvar la panadería de su abuela.", "¡Mateo tiene veinte días y cero pesos para salvar la panadería de su abuela!", "gancho"),
+  ("Y tú vas a decidir cómo.", "¡Y tú vas a decidir cómo!", "emocion"),
+  ("Esta mañana, el señor Barros pegó un aviso en la puerta de La Espiga:", None, "serio"),
+  ("un millón quinientos mil pesos en veinte días, o la panadería cierra.", "Un millón quinientos mil pesos en veinte días... o la panadería cierra.", "impacto"),
+  ("La abuela Rosa lleva cuarenta años horneando aquí.", None, "calido"),
+  ("Mateo abrió la caja.", None, "nervioso"),
+  ("Cero pesos.", "Cero pesos.", "impacto"),
+  ("Pero tiene un horno, la receta de la abuela y te tiene a ti.", "Pero tiene un horno, la receta de la abuela... ¡y te tiene a ti!", "decidido"),
+  ("Primera decisión: ¿dónde vende hoy?", "Primera decisión: ¿dónde vende hoy?", "emocion"),
+  ("1A: en la puerta del colegio. Gana más, pero termina agotado.", "Uno A: en la puerta del colegio. Gana más, pero termina agotado.", "alegre"),
+  ("1B: en la feria libre. Gana menos, pero los vecinos confían en él.", "Uno B: en la feria libre. Gana menos, pero los vecinos confían en él.", "calido"),
+  ("Segunda decisión: el tío Lucho le ofrece cien mil pesos, con una condición:", None, "misterio"),
+  ("«Te presto, pero no se lo cuentes a tu abuela».", "Te presto... pero no se lo cuentes a tu abuela.", "frio"),
+  ("2A: acepta el préstamo. 2B: le pide a Vale que grabe un video de la panadería.", "Dos A: acepta el préstamo. Dos B: le pide a Vale que grabe un video de la panadería.", "nervioso"),
+  ("Comenta 1A o 1B, y 2A o 2B. Si nadie vota, gana la A.", "¡Comenta uno A o uno B, y dos A o dos B! Si nadie vota, gana la A.", "emocion"),
+ ],
 }
 
 k = Kokoro(f"{KOK}/kokoro-v1.0.onnx", f"{KOK}/voices-v1.0.bin")

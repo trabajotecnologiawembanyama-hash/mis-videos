@@ -7,7 +7,7 @@ from sintes import place, piano, pluck, pad, thump, whistle, squeak, rip, coins,
 
 EP, OUT = sys.argv[1], sys.argv[2]
 WORDS = json.load(open(f"/tmp/claude-0/brote/k_{EP}/palabras.json"))["words"]
-DUR = 55.0
+DUR = float(os.environ.get("BROTE_DUR", "55"))
 
 
 def at(seq, nth=0):
@@ -236,6 +236,79 @@ elif EP in ("ep06", "ep07", "ep08", "ep09", "ep10"):
         sparkle(at("y levantó") + 0.4, 84, 4, 0.22)
         mystery(at("la próxima"))
 
+
+elif EP == "ep11":
+    rng = S.rng
+
+    def tick(g=0.18):
+        n = int(0.05 * SR); t = np.arange(n) / SR
+        return (np.sin(2 * np.pi * 2400 * t) * np.exp(-t * 120) * g).astype(np.float32)
+
+    def slap(g=0.8):
+        n = int(0.3 * SR); t = np.arange(n) / SR
+        x = S.bp(rng.normal(0, 1, n), 400, 5000) * np.exp(-t * 30) * 1.2 + np.sin(2 * np.pi * 70 * t) * np.exp(-t * 14)
+        return (x * g).astype(np.float32)
+
+    def ding(g=0.35):
+        n = int(1.2 * SR); t = np.arange(n) / SR
+        return ((np.sin(2 * np.pi * 2093 * t) + 0.5 * np.sin(2 * np.pi * 4186 * t)) * np.exp(-t * 4) * g).astype(np.float32)
+
+    def drawer(g=0.4):
+        n = int(0.35 * SR); t = np.arange(n) / SR
+        return (S.bp(rng.normal(0, 1, n), 200, 2500) * np.exp(-t * 9) * g + np.sin(2 * np.pi * 90 * t) * np.exp(-t * 25) * g).astype(np.float32)
+
+    def whoosh(d=0.45, g=0.18):
+        n = int(d * SR); t = np.arange(n) / SR
+        e = np.sin(np.pi * t / d) ** 2
+        return (S.bp(rng.normal(0, 1, n), 600, 5000) * e * g).astype(np.float32)
+
+    def riser(d, g=0.12):
+        n = int(d * SR); t = np.arange(n) / SR
+        f = 200 + 600 * (t / d) ** 2
+        return ((np.sin(2 * np.pi * np.cumsum(f) / SR) * 0.4 + S.bp(rng.normal(0, 1, n), 2000, 8000) * 0.6) * (t / d) ** 2 * g).astype(np.float32)
+
+    def pop(g=0.25):
+        n = int(0.12 * SR); t = np.arange(n) / SR
+        return (np.sin(2 * np.pi * (900 - 2400 * t) * t) * np.exp(-t * 30) * g).astype(np.float32)
+
+    def sparkle(t0, base=84, n=4, g=0.16):
+        for k in range(n): place(mus, piano(midi(base + (0, 4, 7, 12)[k % 4]), 1.6, g), t0 + k * 0.09, pan=(-0.4 + 0.25 * k))
+
+    # gancho: golpe del aviso + acorde de tensión
+    place(fx, slap(0.9), 0.05); place(fx, thump(55, 0.6, 0.8), 0.05)
+    place(mus, pad([midi(m) for m in (38, 45, 50, 53)], A_ := at("esta mañana") + 0.2, 0.05, 0.8, 0.2, 800), 0.0)
+    place(fx, whoosh(), at("y tú") - 0.15); sparkle(at("decidir"), 79)
+    # calle y aviso: tensión
+    place(fx, murmur(at("la abuela rosa") - at("esta mañana"), 0.03), at("esta mañana"))
+    for tt in np.arange(at("esta mañana") + 0.3, at("un millón"), 0.48): place(fx, thump(150, 0.08, 0.15), tt)        # pasos
+    place(mus, pad([midi(m) for m in (40, 47, 52, 55)], at("la abuela rosa") - at("esta mañana") + 0.3, 0.4, 0.6, 0.15, 700), at("esta mañana"))
+    for tt in np.arange(at("un millón"), at("o la"), 0.5): place(fx, thump(60, 0.3, 0.32), tt)
+    place(fx, slap(0.6), at("cierra") + 0.05); place(fx, thump(48, 0.8, 0.9), at("cierra") + 0.05)
+    # abuela: piano cálido
+    for k, m in enumerate((64, 67, 72, 71, 67)): place(mus, piano(midi(m), 2.4, 0.22), at("la abuela rosa") + 0.1 + k * 0.55)
+    place(mus, pad([midi(m) for m in (48, 55, 60, 64)], at("mateo abrió") - at("la abuela rosa") + 0.4, 0.4, 0.5, 0.1, 1400), at("la abuela rosa"))
+    # caja vacía
+    place(fx, drawer(0.5), at("abrió") + 0.25); place(fx, ding(0.3), at("abrió") + 0.35)
+    place(fx, pop(0.3), at("cero pesos") + 0.05); place(mus, piano(midi(40), 2.5, 0.35), at("cero pesos")); place(mus, piano(midi(39), 2.5, 0.3), at("cero pesos") + 0.25)
+    # esperanza y llamado al jugador
+    groove(at("pero tiene"), at("primera decisión"), HOPE, 1.4, 0.2, padv=0.11, bright=2200)
+    sparkle(at("a ti"), 84, 4, 0.2)
+    # decisiones: pulso de juego + tic-tac que acelera + música que sube
+    for (ta, tb) in ((at("primera decisión"), at("segunda decisión")), (at("2a"), at("comenta"))):
+        place(fx, whoosh(0.5, 0.25), ta - 0.1); place(fx, riser(0.6, 0.1), ta - 0.6)
+        groove(ta, tb, TENSE, 1.6, 0.2, padv=0.12, bright=1800)
+        n = 0
+        for tt in np.arange(ta + 0.3, tb - 0.1, 0.5):
+            place(fx, tick(0.12 + 0.1 * (tt - ta) / (tb - ta)), tt); n += 1
+        for key in (("1a", "1b") if ta == at("primera decisión") else ("2a", "2b")):
+            place(fx, pop(0.28), at(key) + 0.05); place(fx, whoosh(0.35, 0.14), at(key) - 0.1)
+    # tío Lucho: secreto
+    place(mus, pad([midi(m) for m in (38, 44, 50)], at("2a") - at("segunda decisión") + 0.3, 0.3, 0.6, 0.17, 600), at("segunda decisión"))
+    place(fx, coins(0.2), at("cien mil") + 0.2); place(mus, piano(midi(75), 2, 0.18), at("te presto") + 0.2); place(mus, piano(midi(74), 2.2, 0.16), at("tu abuela") + 0.3)
+    # llamada a votar: final animado
+    groove(at("comenta"), DUR - 0.4, TRIUMPH, 1.4, 0.24, padv=0.13, bright=2600)
+    sparkle(at("comenta") + 0.1, 84, 4, 0.22)
+    for k in ("1a", "1b", "2a", "2b"): place(fx, pop(0.2), at(k, 1) + 0.05)
 
 mus = reverb(mus, 2.4, 0.3); fx = reverb(fx, 1.2, 0.18)
 w = wave.open(f"/tmp/claude-0/brote/k_{EP}/voz.wav"); v = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float32) / 32768

@@ -1,6 +1,7 @@
 """Sintetizadores de música y efectos de Brote (compartidos por el motor 2D)."""
+import os
 import numpy as np
-DUR = 55.0
+DUR = float(os.environ.get("BROTE_DUR", "55"))
 SR = 48000
 NA = int(DUR * SR)
 rng = np.random.default_rng(11)

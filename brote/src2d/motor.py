@@ -90,6 +90,15 @@ ROSA = dict(hair="bun", hair_col=(240, 240, 238), shirt=(170, 120, 190), shirt2=
             apron=(245, 235, 220), shoe=(90, 70, 60), h=1.26)
 JUEZ = dict(hair="short", hair_col=(60, 60, 64), glasses=(20, 20, 20), shirt=(60, 70, 90), shirt2=(44, 52, 70), pants=(40, 44, 56), shoe=(30, 30, 30), h=1.34)
 JUEZA = dict(hair="bun", hair_col=(90, 50, 30), shirt=(180, 60, 70), shirt2=(140, 44, 54), pants=(60, 50, 60), skirt=True, shoe=(40, 30, 30), h=1.28)
+MATEO = dict(hair="short", hair_col=(42, 28, 18), shirt=(52, 168, 88), shirt2=(36, 130, 66), pants=(48, 62, 98), shoe=(236, 236, 236),
+             sole=(250, 250, 250), backpack=(140, 144, 152), h=1.08)
+ABUELA = dict(hair="bun", hair_col=(238, 238, 234), glasses=(70, 50, 40), shirt=(60, 74, 128), shirt2=(46, 58, 104), pants=(60, 74, 128),
+              skirt=True, apron=(250, 248, 242), shoe=(96, 70, 54), h=1.22)
+BARROS = dict(hair="gray", glasses=(24, 24, 28), shirt=(84, 88, 100), shirt2=(64, 68, 80), pants=(70, 74, 86), shoe=(26, 24, 24),
+              tie=(170, 40, 46), h=1.4)
+TIO_LUCHO = dict(cap=(176, 44, 44), hair="short", hair_col=(44, 32, 22), moustache=(44, 32, 22), shirt=(156, 104, 62), shirt2=(126, 82, 48),
+                 pants=(62, 62, 72), shoe=(70, 50, 40), belly=1.3, h=1.3)
+VALE = dict(hair="pony", hair_col=(28, 18, 14), shirt=(150, 84, 206), shirt2=(120, 62, 170), pants=(40, 44, 64), shoe=(250, 250, 250), h=1.02)
 BLACK = (18, 18, 20)
 ZERO = dict(lean=0, head=0, ab=(8, -4), af=(-6, -4), lb=(4, 0), lf=(-4, 0), air=0, seat=None, look=(0.6, 0), blink=0, mood="neutral",
             tears=0, squash=1.0, body_rot=0)
@@ -257,6 +266,10 @@ def draw_char(cv, spec, p, x, y, S, face=1, t=0.0, extras=None):
     cv.save(); cv.translate(*hip)
     cv.rotate(lean * face)
     tw = 0.12 * u * spec.get("belly", 1.0); th = torso * 1.02
+    if spec.get("backpack"):
+        bc = spec["backpack"]
+        rrect(cv, -face * tw * 0.5 - face * 0.05 * u - 0.05 * u, -th * 0.95, 0.1 * u, th * 0.78, 0.03 * u, lin((0, -th), (0, 0), [bc, tuple(int(v * 0.75) for v in bc)]))
+        rrect(cv, -face * tw * 0.5 - face * 0.085 * u - 0.025 * u, -th * 0.55, 0.05 * u, th * 0.28, 0.015 * u, fill(tuple(int(v * 0.85) for v in bc)))
     if spec.get("skirt"):
         cv.drawPath(path([(-tw * 0.5, -0.02 * u), (tw * 0.5, -0.02 * u), (tw * 0.75, 0.09 * u), (-tw * 0.75, 0.09 * u)]), fill(spec["pants"]))
     else:
@@ -264,6 +277,14 @@ def draw_char(cv, spec, p, x, y, S, face=1, t=0.0, extras=None):
     shirt_p = lin((0, -th), (0, 0), [shirt, shirt2])
     rrect(cv, -tw / 2, -th - 0.005 * u, tw, th * 0.98, 0.035 * u, shirt_p)
     cv.drawLine(-tw * 0.18, -th * 0.92, tw * 0.18, -th * 0.92, stroke(shirt2, lw * 0.5, 0.8))
+    if spec.get("backpack"):
+        sc_ = tuple(int(v * 0.7) for v in spec["backpack"])
+        cv.drawLine(-tw * 0.22 * face, -th * 0.97, tw * 0.05 * face, -th * 0.35, stroke(sc_, lw * 0.75))
+    if spec.get("tie"):
+        tc_ = spec["tie"]
+        cv.drawPath(path([(-tw * 0.12, -th * 0.98), (tw * 0.12, -th * 0.98), (tw * 0.05, -th * 0.88), (tw * 0.1, -th * 0.4), (0, -th * 0.3), (-tw * 0.1, -th * 0.4), (-tw * 0.05, -th * 0.88)]), fill(tc_))
+        cv.drawPath(path([(-tw * 0.32, -th * 1.0), (-tw * 0.1, -th * 0.98), (-tw * 0.2, -th * 0.7)]), fill((245, 245, 245)))
+        cv.drawPath(path([(tw * 0.32, -th * 1.0), (tw * 0.1, -th * 0.98), (tw * 0.2, -th * 0.7)]), fill((245, 245, 245)))
     if spec.get("apron"):
         ac = spec["apron"]
         cv.drawLine(-tw * 0.22, -th * 0.95, -tw * 0.3, -th * 0.68, stroke(ac, lw * 0.55)); cv.drawLine(tw * 0.22, -th * 0.95, tw * 0.3, -th * 0.68, stroke(ac, lw * 0.55))

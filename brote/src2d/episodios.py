@@ -9,7 +9,11 @@ import escenarios as E
 from escenarios import Cam, cam_move, draw_bg, BW, BH, rim_and_net, particles, vignette, paper
 
 EP = sys.argv[1]
-DUR = 55.0
+DUR = float(os.environ.get("BROTE_DUR", "55"))
+SUB_COLOR = (255, 255, 255)
+KEY_Y = 250
+OVERLAY = None
+FADE_IN = True
 VOZ = f"/tmp/claude-0/brote/k_{EP}"
 WORDS = json.load(open(f"{VOZ}/palabras.json"))["words"]
 AMARILLO = (255, 200, 61)
@@ -398,6 +402,9 @@ if os.path.exists(os.path.join(os.path.dirname(__file__), "episodios_b.py")):
 if os.path.exists(os.path.join(os.path.dirname(__file__), "episodios_c.py")):
     from episodios_c import ep06, ep07, ep08, ep09, ep10
     EPISODES.update(ep06=ep06, ep07=ep07, ep08=ep08, ep09=ep09, ep10=ep10)
+if os.path.exists(os.path.join(os.path.dirname(__file__), "episodios_d.py")):
+    from episodios_d import ep11
+    EPISODES.update(ep11=ep11)
 
 
 # ===================================================================== render
@@ -407,7 +414,7 @@ def subtitle(cv, T):
         end = nxt if nxt - w["t1"] < 0.35 else w["t1"] + 0.18
         if w["t0"] <= T < end:
             s = 0.86 + 0.14 * ease((T - w["t0"]) / 0.08)
-            text_center(cv, w["w"].replace("«", "").replace("»", "").upper(), W / 2, 1450, 104, (255, 255, 255), (0, 0, 0), 0.085, scale=s)
+            text_center(cv, w["w"].replace("«", "").replace("»", "").upper(), W / 2, 1450, 104, SUB_COLOR, (0, 0, 0), 0.085, scale=s)
             return
 
 
@@ -416,7 +423,7 @@ def key_texts(cv, T, texts):
         if t0 <= T < t1:
             a = min(1, (T - t0) / 0.15) * min(1, (t1 - T) / 0.15)
             f = skia.Font(typeface("Inter-Black"), 80); fit = min(1.0, 980 / max(1, f.measureText(s)))
-            text_center(cv, s, W / 2, 250, 80 * fit, AMARILLO, (17, 17, 17), 0.09, a=a, scale=0.92 + 0.08 * ease((T - t0) / 0.2))
+            text_center(cv, s, W / 2, KEY_Y, 80 * fit, AMARILLO if SUB_COLOR != AMARILLO else (255, 255, 255), (17, 17, 17), 0.09, a=a, scale=0.92 + 0.08 * ease((T - t0) / 0.2))
 
 
 def render(out, only=None):
@@ -431,9 +438,10 @@ def render(out, only=None):
             if t0 <= T < starts[i + 1]:
                 cv.save(); fn(cv, T - t0, starts[i + 1] - t0, T); cv.restore(); break
         vignette(cv, 0.35)
+        if OVERLAY: OVERLAY(cv, T)
         key_texts(cv, T, texts)
         subtitle(cv, T)
-        if T < 0.2: cv.drawRect(skia.Rect.MakeWH(W, H), fill((0, 0, 0), 1 - T / 0.2))
+        if FADE_IN and T < 0.2: cv.drawRect(skia.Rect.MakeWH(W, H), fill((0, 0, 0), 1 - T / 0.2))
         if T > DUR - 0.5: cv.drawRect(skia.Rect.MakeWH(W, H), fill((0, 0, 0), (T - (DUR - 0.5)) / 0.5))
         if only:
             wr.surf.makeImageSnapshot().save(f"{out}_{T:05.2f}.png")
